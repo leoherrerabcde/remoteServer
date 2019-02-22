@@ -18,19 +18,23 @@ def getValueFromMsg(frame,name):
 	pos_ini = pos_end + 1
 	pos_end = frame.find(",",pos_ini)
 	if pos_end <= pos_ini:
-		return ""
-	strValue = frame[pos_ini,pos_end]
-	return
+		strValue = frame[pos_ini:]
+	else:
+		strValue = frame[pos_ini:pos_end]
+		
+	strpos = "Ini: " + str(pos_ini) + " End:" + str(pos_end)
+	print strpos
+	return strValue
 	
 def getFrameType(frame):
 	frameType = getValueFromMsg(frame, "Header")
-	return
+	return frameType
 
 def makeAliveMsgResponse(counter):
 	msg = "<Header:AliveMessage,AliveCounter:"
 	msg += str(counter)
 	msg += ">"
-	return
+	return msg
 	
 #parsing Command Line Arguments
 
@@ -59,9 +63,9 @@ print "Trying to connect to Host:%s:%s" %(host_ip,remotePort)
 
 s.connect((host_ip, remotePort))
 
-msg = "{DeviceName:RestService,ServicePID:"
+msg = "<DeviceName:RestService,ServicePID:"
 msg += str(os.getpid())
-msg += "}"
+msg += ">"
 
 print "Sending: %s" %(msg)
 print
@@ -75,24 +79,34 @@ bufferIn = ""
 while True:
 	print "Waiting for data..."
 	data =s.recv(1024)
+	if data == "":
+		break
 	print "Received data: %s" %(data)
 	bufferIn += data
+	print bufferIn
 	while True:
 		pos_ini = bufferIn.find("<")
 		if pos_ini < 0:
 			bufferIn = ""
-			print "Bad data"
+			print "Socket Disconnection"
 			break;
 		else:
 			pos_end = bufferIn.find(">")
+			strpos = "Ini: " + str(pos_ini) + " End:" + str(pos_end)
+			print strpos
 			if pos_end > pos_ini:
 				frame = bufferIn[pos_ini+1:pos_end]
+				bufferIn = bufferIn[:pos_ini]
+				print "Frame: " 
+				print frame
 				frame_type = getFrameType(frame)
 				print "Frame Type: %s" %(frame_type)
 				if frame_type == "AliveMessage":
 					counter = getValueFromMsg(frame, "AliveCounter")
-					counter+=1
-					msg = makeAliveMsgResponse(counter)
+					print "Counter:"
+					print counter
+					counterPlusOne = int(counter)+1
+					msg = makeAliveMsgResponse(counterPlusOne)
 					print "Sending Alive Message: %s" %(msg)
 					s.send(msg)
 				elif frame_type == "method":
@@ -104,3 +118,5 @@ while True:
 					print "method : %s" %(method)
 					print "body : %s" %(body)
 		break
+
+print "Application Closed Normally"
