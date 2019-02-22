@@ -73,24 +73,29 @@ print "the socket has successfully connected on port == %s" %(host_ip)
 bufferIn = ""
 
 while True:
+	print "Waiting for data..."
 	data =s.recv(1024)
+	print "Received data: %s" %(data)
 	bufferIn += data
 	while True:
 		pos_ini = bufferIn.find("<")
 		if pos_ini < 0:
 			bufferIn = ""
+			print "Bad data"
 			break;
 		else:
 			pos_end = bufferIn.find(">")
 			if pos_end > pos_ini:
-				frame = bufferIn[pos_ini+1, pos_end]
+				frame = bufferIn[pos_ini+1:pos_end]
 				frame_type = getFrameType(frame)
+				print "Frame Type: %s" %(frame_type)
 				if frame_type == "AliveMessage":
 					counter = getValueFromMsg(frame, "AliveCounter")
 					counter+=1
 					msg = makeAliveMsgResponse(counter)
+					print "Sending Alive Message: %s" %(msg)
 					s.send(msg)
-				elif frame_type == "AliveMessage":
+				elif frame_type == "method":
 					bufferIn = bufferIn[pos_end+1:]
 					url = getValueFromMsg(frame,"url")
 					method = getValueFromMsg(frame,"method")
@@ -98,3 +103,4 @@ while True:
 					print "url : %s" %(url)
 					print "method : %s" %(method)
 					print "body : %s" %(body)
+		break
