@@ -36,6 +36,18 @@ def makeAliveMsgResponse(counter):
 	msg += ">"
 	return msg
 	
+def makePostMsgResponse(txt):
+	msg = "<Header:RestService,method:post,body:"
+	msg += txt
+	msg += ">"
+	return msg
+	
+def makeGetMsgResponse(txt):
+	msg = "<Header:RestService,method:get,body:"
+	msg += txt
+	msg += ">"
+	return msg	
+
 #parsing Command Line Arguments
 
 parser = argparse.ArgumentParser()
@@ -117,6 +129,14 @@ while True:
 					print "url : %s" %(url)
 					print "method : %s" %(method)
 					print "body : %s" %(body)
+					if method == "get":
+						r = requests.get(url, data = body)
+						msg = makeGetMsgResponse(r.text)
+						s.send(msg)
+					elif method == "post":
+						r = requests.post(url, data = body)
+						msg = makePostMsgResponse(r.text)
+						s.send(msg)
 		break
 
 print "Application Closed Normally"

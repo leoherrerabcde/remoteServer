@@ -1,1 +1,5 @@
 <url:http://ddsadsa,method:get,body:blablabla>
+
+Exist tabla Modificada:
+method=get
+body="id="
