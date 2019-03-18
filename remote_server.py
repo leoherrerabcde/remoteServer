@@ -90,12 +90,14 @@ bufferIn = ""
 
 while True:
 	print "Waiting for data..."
-	data =s.recv(1024)
+	data =s.recv(4096)
 	if data == "":
 		break
-	print "Received data: %s" %(data)
+	print "Received data."
 	bufferIn += data
-	print bufferIn
+	#print bufferIn[0,30]
+	#print "..."
+	#print bufferIn[-30,]
 	while True:
 		pos_ini = bufferIn.find("<")
 		if pos_ini < 0:
@@ -109,8 +111,8 @@ while True:
 			if pos_end > pos_ini:
 				frame = bufferIn[pos_ini+1:pos_end]
 				bufferIn = bufferIn[:pos_ini]
-				print "Frame: " 
-				print frame
+				#print "Frame: " 
+				#print frame
 				frame_type = getFrameType(frame)
 				print "Frame Type: %s" %(frame_type)
 				if frame_type == "AliveMessage":
@@ -121,22 +123,28 @@ while True:
 					msg = makeAliveMsgResponse(counterPlusOne)
 					print "Sending Alive Message: %s" %(msg)
 					s.send(msg)
-				elif frame_type == "method":
+				elif frame_type == "RestService":
 					bufferIn = bufferIn[pos_end+1:]
 					url = getValueFromMsg(frame,"url")
 					method = getValueFromMsg(frame,"method")
 					body = getValueFromMsg(frame,"body")
+					body_rec = body[:100]
+					body_rec += " ... "
+					body_rec += body[:-30]
 					print "url : %s" %(url)
 					print "method : %s" %(method)
-					print "body : %s" %(body)
+					print "body : %s" %(body_rec)
 					if method == "get":
-						r = requests.get(url, data = body)
-						msg = makeGetMsgResponse(r.text)
+						print "Sending get request. Waiting response."
+						r = requests.get(url, params = body)
+						msg = makeGetMsgResponse(r.status_code)
 						s.send(msg)
 					elif method == "post":
+						print "Sending post request. Waiting response."
 						r = requests.post(url, data = body)
-						msg = makePostMsgResponse(r.text)
+						msg = makePostMsgResponse(r.status_code)
 						s.send(msg)
+					print "Response sent."
 		break
 
 print "Application Closed Normally"
