@@ -4,6 +4,7 @@ import requests
 import socket
 import os
 import argparse
+import json
 
 def getValueFromMsg(frame,name):
 	pos_ini = frame.find(name)
@@ -42,9 +43,9 @@ def makePostMsgResponse(txt):
 	msg += ">"
 	return msg
 	
-def makeGetMsgResponse(txt):
+def makeGetMsgResponse(data):
 	msg = "<Header:RestService,method:get,body:"
-	msg += txt
+	msg += data
 	msg += ">"
 	return msg	
 
@@ -137,8 +138,9 @@ while True:
 					if method == "get":
 						print "Sending get request. Waiting response."
 						r = requests.get(url, params = body)
-						msg = makeGetMsgResponse(r.status_code)
-						s.send(msg)
+						if r.status_code == requests.codes.ok:
+							msg = makeGetMsgResponse(json.dumps(r.json()))
+							s.send(msg)
 					elif method == "post":
 						print "Sending post request. Waiting response."
 						r = requests.post(url, data = body)
