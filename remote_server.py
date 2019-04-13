@@ -45,7 +45,9 @@ def makePostMsgResponse(txt):
 	
 def makeGetMsgResponse(data):
 	msg = "<Header:RestService,method:get,body:"
+	msg += "|"
 	msg += data
+	msg += "|"
 	msg += ">"
 	return msg	
 
