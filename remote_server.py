@@ -49,6 +49,7 @@ def makeGetMsgResponse(data):
 	msg += data
 	msg += "|"
 	msg += ">"
+	print data[:20]
 	return msg	
 
 #parsing Command Line Arguments
@@ -145,7 +146,7 @@ while True:
 							s.send(msg)
 					elif method == "post":
 						print "Sending post request. Waiting response."
-						r = requests.post(url, data = body)
+						r = requests.post(url, json = body)
 						msg = makePostMsgResponse(r.status_code)
 						s.send(msg)
 					print "Response sent."
