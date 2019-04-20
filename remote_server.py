@@ -27,6 +27,38 @@ def getValueFromMsg(frame,name):
 	print strpos
 	return strValue
 	
+def getBodyFromMsg(frame,name):
+	pos_ini = frame.find(name)
+	if pos_ini < 0:
+		return ""
+	pos_end = frame.find(":", pos_ini+len(name))
+	if pos_end <  pos_ini+len(name) :
+		return ""
+	label = frame[pos_ini:pos_end].strip()
+	if label != name:
+		return ""
+	pos_ini = pos_end + 1
+	pos_ini = frame.find("|",pos_ini)
+	if pos_ini < pos_end:
+		print "Label:%s" %label
+		strpos = "Ini: " + str(pos_ini) + " End:" + str(pos_end)
+		print strpos
+		print frame
+		return ""
+	pos_ini = pos_ini + 1
+	pos_end = frame.find("|",pos_ini)
+	#strpos = "Ini: " + str(pos_ini) + " End:" + str(pos_end)
+	#print strpos
+	if pos_end <= pos_ini:
+		strValue = frame[pos_ini:]
+	else:
+		strValue = frame[pos_ini:pos_end]
+		
+	strpos = "Ini: " + str(pos_ini) + " End:" + str(pos_end)
+	print strpos
+	return strValue
+	
+	
 def getFrameType(frame):
 	frameType = getValueFromMsg(frame, "Header")
 	return frameType
@@ -39,7 +71,9 @@ def makeAliveMsgResponse(counter):
 	
 def makePostMsgResponse(txt):
 	msg = "<Header:RestService,method:post,body:"
+	msg += "|"
 	msg += txt
+	msg += "|"
 	msg += ">"
 	return msg
 	
@@ -131,25 +165,40 @@ while True:
 					bufferIn = bufferIn[pos_end+1:]
 					url = getValueFromMsg(frame,"url")
 					method = getValueFromMsg(frame,"method")
-					body = getValueFromMsg(frame,"body")
-					body_rec = body[:100]
-					body_rec += " ... "
-					body_rec += body[:-30]
 					print "url : %s" %(url)
 					print "method : %s" %(method)
-					print "body : %s" %(body_rec)
+					#json_text = "[{'numero_registro':'1','fec_init_transac':'2019/02/07 00:48:50','id_dispensador':'01','id_bombero':'2119d67203c632','id_receptor':'11111','rfid_veh_receptor':'072017120600000072','valor_odometro':'0000','valor_horometro':'0000','tipo_transac':'7','flujometro_ini':'0','flujometro_fin':'0','fec_fin_transac':'2019/02/07 00:50:37','litros':'0'}]"
+					json_text = [{"numero_registro":"1","fec_init_transac":"2019/02/07 00:48:50","id_dispensador":"01","id_bombero":"2119d67203c632","id_receptor":"11111","rfid_veh_receptor":"072017120600000072","valor_odometro":"0000","valor_horometro":"0000","tipo_transac":"7","flujometro_ini":"0","flujometro_fin":"0","fec_fin_transac":"2019/02/07 00:50:37","litros":"0"}]
+					my_url = "http://157.230.225.248:3000/api/control"
 					if method == "get":
+						body = getValueFromMsg(frame,"body")
+						body_rec = body[:100]
+						body_rec += " ... "
+						body_rec += body[:-30]
+						print "body : %s" %(body_rec)
 						print "Sending get request. Waiting response."
 						r = requests.get(url, params = body)
 						if r.status_code == requests.codes.ok:
 							msg = makeGetMsgResponse(json.dumps(r.json()))
 							s.send(msg)
+							print "Response sent."
 					elif method == "post":
+						body = getBodyFromMsg(frame,"body")
+						body_rec = body[:100]
+						body_rec += " ... "
+						body_rec += body[:-30]
+						print "body : %s" %(body_rec)
+						print body
 						print "Sending post request. Waiting response."
-						r = requests.post(url, json = body)
-						msg = makePostMsgResponse(r.status_code)
-						s.send(msg)
-					print "Response sent."
+						json_body = json.loads(body)
+						r = requests.post(url, json = json_body)
+						#r = requests.post(url, json = json_text)
+						print "r.status_code = %s" %r.status_code
+						print r.text
+						if r.status_code == requests.codes.ok:
+							msg = makePostMsgResponse(json.dumps(r.json()))
+							s.send(msg)
+							print "Response sent."
 		break
 
 print "Application Closed Normally"
