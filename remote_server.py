@@ -174,7 +174,7 @@ while True:
 						body = getValueFromMsg(frame,"body")
 						body_rec = body[:100]
 						body_rec += " ... "
-						body_rec += body[:-30]
+						body_rec += body[-30:]
 						print "body : %s" %(body_rec)
 						print "Sending get request. Waiting response."
 						r = requests.get(url, params = body)
@@ -184,11 +184,11 @@ while True:
 							print "Response sent."
 					elif method == "post":
 						body = getBodyFromMsg(frame,"body")
-						body_rec = body[:100]
+						body_rec = body[:30]
 						body_rec += " ... "
-						body_rec += body[:-30]
+						body_rec += body[-30:]
 						print "body : %s" %(body_rec)
-						print body
+						#print body
 						print "Sending post request. Waiting response."
 						json_body = json.loads(body)
 						r = requests.post(url, json = json_body)
